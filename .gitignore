@@ -136,3 +136,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+# Local secrets and verified artifacts
+.env
+.env.*
+!.env.example
+artifacts/
+private/
+.streamlit/secrets.toml
