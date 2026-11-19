@@ -1,60 +1,58 @@
-# Insurance Premium Prediction
-### Problem Statement :
-The primary objective of this initiative is to offer individuals an insight into the potential financial requirements for their health coverage, tailored to their specific health circumstances. Armed with this understanding, individuals can then navigate through the offerings of different health insurance providers, taking into consideration the projected expenses from our assessment. This approach empowers individuals to focus their attention on the essential health-related aspects of an insurance plan, while sidestepping any convoluted or unnecessary complexities.
+# Insurance Expense Prediction, Learning Project
 
-### Dataset:
-The dataset has been sourced from a Kaggle repository, and you have the option to download it from there: [download the dataset](https://www.kaggle.com/datasets/noordeen/insurance-premium-prediction)
+Regression experiments and a Streamlit interface for a historical insurance-expense dataset. This is an educational model project, not an insurer quote, clinical tool, coverage recommendation or validated pricing system.
 
-### Approach
-Executing machine learning tasks such as Data Exploration, Data Cleaning, Feature Engineering, Model Building, and Model Testing to construct a solution capable of predicting health insurance premiums for individuals.
+[Setup](SETUP.md) | [Model card and limits](MODEL_CARD.md) | [Security](SECURITY.md) | [Changes](CHANGELOG.md)
 
-Here's how each step was carried out:
+## Repository status
 
-**Data Exploration:** Investigated the dataset using libraries like pandas, numpy, matplotlib, plotly, and seaborn.
+| Component | Present | Verification limit |
+| --- | --- | --- |
+| Training notebook | `Model_buliding.ipynb`, valid JSON notebook with exploration and regression experiments | Not re-executed; saved outputs are historical, not fresh metrics |
+| Data | `insurance.csv` and `data.csv`, byte-identical files, 1,338 rows and seven columns | Source/redistribution rights and demographic representativeness not independently verified |
+| Legacy binary | `gradient_boosting_model_test.ipynb` | Binary pickle-style file despite its extension, not a readable notebook; not loaded or trusted |
+| App | `Insurance_app.py` | Clear missing-model state; predictions require an explicitly trusted compatible artifact |
+| Feature contract | `features.py` | Pure-Python encoding and validation tests |
+| Optional MongoDB importer | `data_dump.py` | Requires local URI plus explicit write opt-in; no database contacted during refresh |
 
-**Exploratory Data Analysis:** Generated various graphs to gain deeper insights into both dependent and independent variables.
+The previously referenced `Eda_and_Model_building/GB_MODEL.joblib` path is absent. The app does not pretend that a verified model exists and does not silently load the mislabeled binary.
 
-**Feature Engineering:** Rescaled numerical features and encoded categorical ones.
+## Quick checks
 
-**Model Building:** Started with dataset splitting, then proceeded to train different Machine Learning Algorithms, including:
-- Linear Regression
-- Support vector regression
-- Random Forest Regressor
-- Gradient Boosting Regressor
+Python standard library only:
 
-**Model Selection:** Evaluated all models based on their mean absolute error(mae) and R-squared metrics.
+```sh
+python -m unittest discover -s tests -v
+```
 
-**Pickle File:** Chose the model with the best RMSE score and R-squared value, then generated a pickle file using the pickle library.
+Tests cover feature order/encoding, invalid inputs, importer validation and no-network import behavior. They are not accuracy, fairness, model-deserialization or deployed-app tests.
 
-**Webpage & Deployment:** Designed a web application that collects user inputs and presents outputs. The project was subsequently deployed on the streamlit  Platform.
+## Run the interface
 
-Each of these steps was meticulously executed to create a comprehensive solution for predicting health insurance premiums, involving everything from initial data exploration to the final deployment of the predictive model on a web interface.
+Use an isolated environment and review the historical pinned `requirements.txt` for compatibility with your Python/platform. Those pins were not refreshed or installation-tested here.
 
-### Web app interface 
-![alt text](https://github.com/Shekharmeena28/Insurance_premium_prediction/blob/main/Image/Screenshot%202023-06-23%20182904.png)
+```sh
+python -m venv .venv
+# Activate the environment for your operating system.
+python -m pip install -r requirements.txt
+python -m streamlit run Insurance_app.py
+```
 
-Link for the web app
-https://insurancepremiumprediction-j2kcdoauplgk9jb4cmmhq6.streamlit.app/
-### Libraries used:
-    1) Pandas
-    2) Numpy
-    3) Matplotlib, Seaborn, Plotly
-    4) Scikit-Learn
-    5) Streamlit
-    6) HTML
-    7) CSS
+Without a verified model, the app displays its setup state instead of predicting. For a model you have independently verified, set `INSURANCE_MODEL_PATH` and `INSURANCE_TRUST_MODEL=true` locally. See [SETUP.md](SETUP.md) before doing that. Loading pickle/joblib can execute code.
 
-**Documentation**
-HIGH LEVEL DESIGN: [https://drive.google.com/file/d/1Y9MCtNy6X27uLZPwhjfy7pbGEQD1lc3b/view?usp=drive_link](url)
+## Data and methods in the original work
 
-LOW LEVEL DESIGN:[https://drive.google.com/file/d/1qucHMJ_4sXWQfbd1VgGOh6SDV8MEiLJw/view?usp=drive_link](url)
+The notebook explores numeric/categorical features, outlier removal and linear regression, SVR, random forest and gradient boosting. It maps sex, smoking category and region into integer features and uses an 80/20 split with a fixed split seed. This is an inventory of code, not confirmation that the modeling choices are sound or that the saved outputs reproduce.
 
+The documented Kaggle source is [Insurance Premium Prediction](https://www.kaggle.com/datasets/noordeen/insurance-premium-prediction). That link is inherited provenance, not a verified license or proof of the original collection process. No new rows or private customer data are added.
 
-ARCHITECTURE: [https://drive.google.com/file/d/1mrYVzAl5-AcWjW6vN4G_ma3O-vKgTjnK/view?usp=drive_link](url)
+## Known limits
 
-WIREFRAME DOCUMENT: [https://drive.google.com/file/d/1CnSpB7IPRfwbUo0bB1q5tLN6vkMK7_Dt/view?usp=drive_link](url)
+- The notebook contains a machine-specific CSV path and is not a clean automated training pipeline.
+- There is no verified artifact-to-notebook/environment lineage, current holdout result, fairness audit, calibration check or deployment evidence.
+- Feature ranges are demo validation limits, not medical guidance or proof of training support.
+- Dataset expense units, time period and applicability to present-day insurance pricing are not verified.
+- Legacy public docs linked external screenshots/deployments whose ownership and current state were not established. They are no longer presented as this repository's verified deployment.
+- An exposed database credential was removed from current code. Historical exposure still requires owner rotation/revocation; a new commit does not erase it.
 
-DETAIL PROJECT REPORT: [https://drive.google.com/file/d/114K9JhJLalD3sPNMp87AadAC04qQY8OW/view?usp=drive_link](url)
-
-Project demo video: [https://drive.google.com/file/d/1GD6hLYVKYRdtq1CPgwWNsxHIczWzl3xl/view?usp=drive_link](https://drive.google.com/file/d/1GD6hLYVKYRdtq1CPgwWNsxHIczWzl3xl/view?usp=sharing)
-
+Original notebooks, CSVs, binary artifact and history are preserved. No database connection, model training/deserialization, payment, email or production deployment was performed during this cleanup.
