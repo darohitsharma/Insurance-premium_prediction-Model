@@ -1,73 +1,52 @@
-from pymongo import MongoClient
-import logging
-import json
-import pandas as pd
-from Insurance.logger import logging
-from Insurance.exception import InsuranceException
-import sys
+"""Optional explicit CSV import. No network connection occurs on import.
+
+Requires owner-supplied local MONGODB_URI and --allow-write at execution.
+Never print the URI or source records. No credential is stored in this file.
+"""
+import argparse
+import csv
+import os
+from pathlib import Path
+
+
+def read_records(path):
+    with Path(path).open(newline='', encoding='utf-8-sig') as source:
+        reader = csv.DictReader(source)
+        expected = {'age', 'sex', 'bmi', 'children', 'smoker', 'region', 'expenses'}
+        if set(reader.fieldnames or []) != expected:
+            raise ValueError('CSV header must match the documented seven-column contract.')
+        return list(reader)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description='Optional one-time CSV import into your own MongoDB.')
+    parser.add_argument('--csv', default='insurance.csv')
+    parser.add_argument('--database', required=True)
+    parser.add_argument('--collection', required=True)
+    parser.add_argument('--allow-write', action='store_true',
+                        help='Explicitly permit inserts. Re-running may create duplicates.')
+    args = parser.parse_args(argv)
+    if not args.allow_write:
+        parser.error('No database connection made. Review the target and pass --allow-write to insert.')
+    uri = os.environ.get('MONGODB_URI', '').strip()
+    if not uri:
+        parser.error('Set MONGODB_URI locally. Do not commit or paste it into chat.')
+    records = read_records(args.csv)
+    if not records:
+        parser.error('No records found. No database connection made.')
+    try:
+        from pymongo import MongoClient
+    except ImportError:
+        parser.error('Optional MongoDB importer requires pymongo, not needed for the app/tests.')
+    # Data types remain CSV strings. This is ingestion, not feature preparation.
+    try:
+        with MongoClient(uri, serverSelectionTimeoutMS=5000) as client:
+            result = client[args.database][args.collection].insert_many(records, ordered=True)
+        print(f'Inserted {len(result.inserted_ids)} records. No row contents printed.')
+    except Exception:
+        # Driver errors may include connection details. Do not echo them.
+        raise SystemExit('Import failed. Inspect the target privately. Partial inserts may exist; do not retry blindly.') from None
+
 
 if __name__ == '__main__':
-#making connection to the monogodb database through url
-    try:
-        logging.info((f"Making connectivity to the mongodbdatabase online version"))
-        client = MongoClient("mongodb+srv://rohit28:sharma@rohitcluster1.jyclaup.mongodb.net/?retryWrites=true&w=majority")
-        logging.info((f"connection successful"))
-    except Exception as e:
-        raise InsuranceException(e, sys)
-
-    #creating database in mongodb
-    try:
-        logging.info((f"creating database"))
-        db = client['Project']
-        logging.info((f"database created"))
-    except Exception as e:
-        raise InsuranceException(e, sys)
-
-    # Collection name 
-    try:
-        logging.info((f"creating the collection"))
-        collection = db['insurance_prediction']
-        logging.info((f"collection created"))
-    except Exception as e:
-        raise InsuranceException(e, sys)
-
-    # Reading the data from the system insurance.csv
-    df = pd.read_csv("insurance.csv")
-    print(f"rows and columns: {df.shape}")
-
-    # Converting dataframe into json so that it can be dumped into mongodb
-    df.reset_index(drop=True, inplace=True)
-
-    json_record = list(json.loads(df.T.to_json()).values())
-    print(json_record[0])
-
-    #dumping the datainto the mongodb database
-    try:
-        logging.info((f"dumping datainto mongodb database"))
-        collection.insert_many(json_record)
-        logging.info((f"data dumped"))
-    except Exception as e:
-        raise InsuranceException(e, sys)
-
-    # Verify the data insertion:
-    result = collection.find()
-    for document in result:
-        print(document)
-
-    #retrieving the dumped data from the mongodb database as Dataframe
-    try:
-        logging.info((f"Retrieving the data from mongodb database"))
-        data = collection.find({}, {'_id': 0})
-        logging.info((f"Data Retrieved"))
-    except Exception as e:
-        raise InsuranceException(e, sys)
-
-    #now save the retrieved data as csv file 
-    try:
-        # Create DataFrame
-        logging.info((f"Saving the data as dataframe"))
-        df = pd.DataFrame(data)
-        df.to_csv('data.csv', index=False)
-        logging.info((f"Data saved"))
-    except Exception as e:
-        raise InsuranceException(e, sys)
+    main()
